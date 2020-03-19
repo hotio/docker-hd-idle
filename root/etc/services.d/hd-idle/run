@@ -2,4 +2,4 @@
 # shellcheck shell=bash
 
 # shellcheck disable=SC2086
-exec "${APP_DIR}/hd-idle" -d -i "${IDLE_TIME}" ${ARGS}
+exec "${APP_DIR}/usr/sbin/hd-idle" -d -i "${IDLE_TIME}" ${ARGS}
