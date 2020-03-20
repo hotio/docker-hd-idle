@@ -21,6 +21,7 @@ The environment variables below are all optional, the values you see are the def
 -e UMASK=002
 -e TZ="Etc/UTC"
 -e ARGS=""
+-e DEBUG="no"
 -e IDLE_TIME=1800
 ```
 
@@ -42,3 +43,7 @@ If you have a need to do additional stuff when the container starts or stops, yo
 
 echo "Hello, this is me, your script."
 ```
+
+## Troubleshooting a problem
+
+By default all output is redirected to `/dev/null`, so you won't see anything from the application when using `docker logs`. Most applications write everything to a log file too. If you do want to see this output with `docker logs`, you can use `-e DEBUG="yes"` to enable this.
