@@ -12,4 +12,4 @@ redirect_cmd() {
 }
 
 # shellcheck disable=SC2086
-redirect_cmd exec "${APP_DIR}/usr/sbin/hd-idle" -d -l "${CONFIG_DIR}/app/hd-idle.log" -i "${IDLE_TIME}" ${ARGS}
+redirect_cmd exec "${APP_DIR}/usr/sbin/hd-idle" -d -i "${IDLE_TIME}" ${ARGS}

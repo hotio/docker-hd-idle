@@ -12,6 +12,7 @@ PGID=${PGID}
 UMASK=${UMASK}
 TZ=${TZ}
 ARGS=${ARGS}
+DEBUG=${DEBUG}
 IDLE_TIME=${IDLE_TIME}
 ----------------------------------------------------------------------
 "
@@ -27,10 +28,4 @@ if [[ ! "${PUID}" -eq 0 ]] && [[ ! "${PGID}" -eq 0 ]]; then
 else
     echo "Running as root is not supported, please fix your PUID and PGID!"
     exit 1
-fi
-
-if [[ ! -d "${CONFIG_DIR}/app" ]]; then
-    echo "Creating directory ${CONFIG_DIR}/app"
-    mkdir "${CONFIG_DIR}/app"
-    chown hotio:hotio "${CONFIG_DIR}/app"
 fi
