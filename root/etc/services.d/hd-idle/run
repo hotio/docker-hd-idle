@@ -3,9 +3,6 @@
 
 umask "${UMASK}"
 
-touch "${CONFIG_DIR}/app/hd-idle.log"
-chown hotio:hotio "${CONFIG_DIR}/app/hd-idle.log"
-
 redirect_cmd() {
     if [[ "${DEBUG}" == "yes" ]]; then
         "$@"
