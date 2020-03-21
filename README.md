@@ -10,7 +10,10 @@
 Just the basics to get the container running:
 
 ```shell
-docker run --rm --privileged=true --name hd-idle -v /<host_folder_config>:/config hotio/hd-idle
+docker run --rm --name hd-idle \
+    --privileged=true \
+    -v /<host_folder_config>:/config \
+    hotio/hd-idle
 ```
 
 The environment variables below are all optional, the values you see are the defaults.
