@@ -12,7 +12,6 @@ if [[ ${1} == "checkdigests" ]]; then
 else
     version=$(curl -u "${GITHUB_ACTOR}:${GITHUB_TOKEN}" -fsSL "https://api.github.com/repos/adelolmo/hd-idle/releases/latest" | jq -r .tag_name | sed s/v//g)
     [[ -z ${version} ]] && exit 1
-    find . -type f -name '*.Dockerfile' -exec sed -i "s/ARG HDIDLE_VERSION=.*$/ARG HDIDLE_VERSION=${version}/g" {} \;
-    sed -i "s/{TAG_VERSION=.*}$/{TAG_VERSION=${version}}/g" .drone.yml
+    sed -i "s/{HDIDLE_VERSION=[^}]*}/{HDIDLE_VERSION=${version}}/g" .drone.yml
     echo "##[set-output name=version;]${version}"
 fi
