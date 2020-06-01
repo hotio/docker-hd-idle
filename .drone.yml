@@ -64,11 +64,6 @@ steps:
   pull: always
   commands:
     - apk -vv info|sort
-- name: usage-info
-  image: ${DRONE_REPO_OWNER}/${DRONE_REPO_NAME##docker-}:${DRONE_COMMIT_BRANCH}-${DRONE_COMMIT_SHA:0:7}-${DRONE_BUILD_NUMBER}-${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}
-  pull: always
-  commands:
-    - /app/hd-idle -h
 
 depends_on:
   - linux-amd64
@@ -123,11 +118,6 @@ steps:
   pull: always
   commands:
     - apk -vv info|sort
-- name: usage-info
-  image: ${DRONE_REPO_OWNER}/${DRONE_REPO_NAME##docker-}:${DRONE_COMMIT_BRANCH}-${DRONE_COMMIT_SHA:0:7}-${DRONE_BUILD_NUMBER}-${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}
-  pull: always
-  commands:
-    - /app/hd-idle -h
 
 depends_on:
   - linux-arm64
@@ -182,11 +172,6 @@ steps:
   pull: always
   commands:
     - apk -vv info|sort
-- name: usage-info
-  image: ${DRONE_REPO_OWNER}/${DRONE_REPO_NAME##docker-}:${DRONE_COMMIT_BRANCH}-${DRONE_COMMIT_SHA:0:7}-${DRONE_BUILD_NUMBER}-${DRONE_STAGE_OS}-${DRONE_STAGE_ARCH}
-  pull: always
-  commands:
-    - /app/hd-idle -h
 
 depends_on:
   - linux-arm
