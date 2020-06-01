@@ -1,12 +1,14 @@
-FROM hotio/base@sha256:d668da1b18583d94b5ddb8e8c25012d24bf3ad54231ab8af2f0ed0ca02bcc6ff
+FROM ubuntu:18.04 as builder
 
 ARG DEBIAN_FRONTEND="noninteractive"
 
-ENV IDLE_TIME=1800
-
-ARG HDIDLE_VERSION
-
 # install hd-idle
-RUN debfile="/tmp/hd-idle.deb" && curl -fsSL -o "${debfile}" "https://github.com/adelolmo/hd-idle/releases/download/v${HDIDLE_VERSION}/hd-idle_${HDIDLE_VERSION}_armhf.deb" && dpkg -x "${debfile}" "${APP_DIR}" && rm "${debfile}"
+ARG HDIDLE_VERSION
+ADD "https://github.com/adelolmo/hd-idle/releases/download/v${HDIDLE_VERSION}/hd-idle_${HDIDLE_VERSION}_armhf.deb" "/tmp/hd-idle.deb"
+RUN dpkg --install "/tmp/hd-idle.deb"
 
+
+FROM hotio/base@sha256:2ab084590c123e37e9ceb51698d9a9b77b54ab6f211e165cfe80e9a96f8ab916
+ENV IDLE_TIME=1800
+COPY --from=builder /usr/sbin/hd-idle /app/hd-idle
 COPY root/ /
