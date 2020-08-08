@@ -31,10 +31,10 @@ The environment variables below are all optional, the values you see are the def
 
 ## Tags
 
-| Tag      | Description                    | Build Status                                                                                                                                            | Last Updated                                                                                                                                                    |
-| ---------|--------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| latest   | The same as `stable`           |                                                                                                                                                         |                                                                                                                                                                 |
-| stable   | Stable version                 | [![Build Status](https://cloud.drone.io/api/badges/hotio/docker-hd-idle/status.svg?ref=refs/heads/stable)](https://cloud.drone.io/hotio/docker-hd-idle) | [![GitHub last commit (branch)](https://img.shields.io/github/last-commit/hotio/docker-hd-idle/stable)](https://github.com/hotio/docker-hd-idle/commits/stable) |
+| Tag      | Description                    | Build Status                                                                                         | Last Updated                                                                                          |
+| ---------|--------------------------------|------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| latest   | The same as `stable`           |                                                                                                      |                                                                                                       |
+| stable   | Stable version                 | ![build](https://github.com/hotio/docker-hd-idle/workflows/build/badge.svg?branch=stable&event=push) | ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/hotio/docker-hd-idle/stable) |
 
 You can also find tags that reference a commit or version number.
 
