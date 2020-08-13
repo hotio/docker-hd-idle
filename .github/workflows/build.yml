@@ -63,7 +63,7 @@ jobs:
       - name: Push to GitHub packages
         env:
           DOCKER_USERNAME: ${GITHUB_REPOSITORY%/*}
-          DOCKER_PASSWORD: ${GITHUB_TOKEN}
+          DOCKER_PASSWORD: ${PERSONAL_TOKEN}
         run: |
           app=$(basename "${GITHUB_REPOSITORY//docker-/}")
           echo "${DOCKER_PASSWORD}" | docker login docker.pkg.github.com --username "${DOCKER_USERNAME}" --password-stdin
