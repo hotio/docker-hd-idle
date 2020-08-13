@@ -63,7 +63,7 @@ jobs:
       - name: Push to GitHub packages
         env:
           DOCKER_USERNAME: ${GITHUB_REPOSITORY%/*}
-          DOCKER_PASSWORD: ${PERSONAL_TOKEN}
+          DOCKER_PASSWORD: ${{ secrets.PERSONAL_TOKEN }}
         run: |
           app=$(basename "${GITHUB_REPOSITORY//docker-/}")
           echo "${DOCKER_PASSWORD}" | docker login docker.pkg.github.com --username "${DOCKER_USERNAME}" --password-stdin
@@ -123,8 +123,12 @@ jobs:
           fi
 
       - name: Create docker manifest (GitHub)
+        env:
+          DOCKER_USERNAME: ${GITHUB_REPOSITORY%/*}
+          DOCKER_PASSWORD: ${{ secrets.PERSONAL_TOKEN }}
         run: |
           app=$(basename "${GITHUB_REPOSITORY//docker-/}")
+          echo "${DOCKER_PASSWORD}" | docker login docker.pkg.github.com --username "${DOCKER_USERNAME}" --password-stdin
           docker manifest create docker.pkg.github.com/${GITHUB_REPOSITORY}/${app}:${GITHUB_REF//refs\/heads\//} \
             --amend docker.pkg.github.com/${GITHUB_REPOSITORY}/${app}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-amd64 \
             --amend docker.pkg.github.com/${GITHUB_REPOSITORY}/${app}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm-v7 \
