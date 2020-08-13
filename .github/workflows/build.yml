@@ -61,9 +61,12 @@ jobs:
           docker run --rm --entrypoint="" ${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-${{ matrix.architecture }} apk -vv info | sort
 
       - name: Push to GitHub packages
+        env:
+          DOCKER_USERNAME: ${GITHUB_REPOSITORY%/*}
+          DOCKER_PASSWORD: ${GITHUB_TOKEN}
         run: |
           app=$(basename "${GITHUB_REPOSITORY//docker-/}")
-          echo "${GITHUB_TOKEN}" | docker login --username "${GITHUB_REPOSITORY%/*}" --password-stdin
+          echo "${DOCKER_PASSWORD}" | docker login docker.pkg.github.com --username "${DOCKER_USERNAME}" --password-stdin
           docker tag ${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-${ARCHITECTURE} docker.pkg.github.com/${GITHUB_REPOSITORY}/${app}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-${ARCHITECTURE}
           docker push docker.pkg.github.com/${GITHUB_REPOSITORY}/${app}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-${ARCHITECTURE}
   
