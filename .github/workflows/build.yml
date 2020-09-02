@@ -110,35 +110,6 @@ jobs:
             docker manifest push ${GITHUB_REPOSITORY//docker-/}:latest
           fi
 
-      - name: Create docker manifest (GitHub)
-        env:
-          DOCKER_USERNAME: ${GITHUB_REPOSITORY%/*}
-          DOCKER_PASSWORD: ${{ secrets.PERSONAL_TOKEN }}
-        run: |
-          echo "${DOCKER_PASSWORD}" | docker login ghcr.io --username "${DOCKER_USERNAME}" --password-stdin
-          docker manifest create ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//} \
-            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-amd64 \
-            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm-v7 \
-            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm64
-          docker manifest push ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}
-          docker manifest create ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${HDIDLE_VERSION=1.10} \
-            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-amd64 \
-            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm-v7 \
-            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm64
-          docker manifest push ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${HDIDLE_VERSION=1.10}
-          docker manifest create ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7} \
-            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-amd64 \
-            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm-v7 \
-            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm64
-          docker manifest push ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}
-          if [[ ${GITHUB_REF//refs\/heads\//} == stable ]]; then
-            docker manifest create ghcr.io/${GITHUB_REPOSITORY//docker-/}:latest \
-              --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-amd64 \
-              --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm-v7 \
-              --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm64
-            docker manifest push ghcr.io/${GITHUB_REPOSITORY//docker-/}:latest
-          fi
-
       - name: Send discord notification
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
