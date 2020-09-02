@@ -52,6 +52,15 @@ jobs:
             --build-arg HDIDLE_VERSION="${HDIDLE_VERSION=1.10}" \
             --file ./${ARCHITECTURE}.Dockerfile ./
 
+      - name: Push to GitHub registry
+        env:
+          DOCKER_USERNAME: ${GITHUB_REPOSITORY%/*}
+          DOCKER_PASSWORD: ${{ secrets.PERSONAL_TOKEN }}
+        run: |
+          echo "${DOCKER_PASSWORD}" | docker login ghcr.io --username "${DOCKER_USERNAME}" --password-stdin
+          docker tag ${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-${{ matrix.architecture }} ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-${{ matrix.architecture }}
+          docker push ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-${{ matrix.architecture }}
+  
       - name: Prepare for tests
         run: |
           docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
@@ -60,20 +69,6 @@ jobs:
         run: |
           docker run --rm --entrypoint="" ${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-${{ matrix.architecture }} apk -vv info | sort
 
-      - name: Push to GitHub packages
-        env:
-          DOCKER_USERNAME: ${GITHUB_REPOSITORY%/*}
-          DOCKER_PASSWORD: ${{ secrets.PERSONAL_TOKEN }}
-        run: |
-          app=$(basename "${GITHUB_REPOSITORY//docker-/}")
-          echo "${DOCKER_PASSWORD}" | docker login docker.pkg.github.com --username "${DOCKER_USERNAME}" --password-stdin
-          docker tag ${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-${{ matrix.architecture }} docker.pkg.github.com/${GITHUB_REPOSITORY}/${app}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-${{ matrix.architecture }}
-          docker push docker.pkg.github.com/${GITHUB_REPOSITORY}/${app}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-${{ matrix.architecture }}
-          docker tag docker.pkg.github.com/${GITHUB_REPOSITORY}/${app}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-${{ matrix.architecture }} docker.pkg.github.com/${GITHUB_REPOSITORY}/${app}:${GITHUB_REF//refs\/heads\//}-${HDIDLE_VERSION=1.10}-${{ matrix.architecture }}
-          docker push docker.pkg.github.com/${GITHUB_REPOSITORY}/${app}:${GITHUB_REF//refs\/heads\//}-${HDIDLE_VERSION=1.10}-${{ matrix.architecture }}
-          docker tag docker.pkg.github.com/${GITHUB_REPOSITORY}/${app}:${GITHUB_REF//refs\/heads\//}-${HDIDLE_VERSION=1.10}-${{ matrix.architecture }} docker.pkg.github.com/${GITHUB_REPOSITORY}/${app}:${GITHUB_REF//refs\/heads\//}-${{ matrix.architecture }}
-          docker push docker.pkg.github.com/${GITHUB_REPOSITORY}/${app}:${GITHUB_REF//refs\/heads\//}-${{ matrix.architecture }}
-  
   publish:
     runs-on: ubuntu-20.04
     needs: [build]
@@ -85,15 +80,12 @@ jobs:
         run: |
           mkdir ~/.docker && echo '{"experimental": "enabled"}' > ~/.docker/config.json
 
-      - name: Login to DockerHub
+      - name: Create docker manifest (DockerHub)
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USER }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_TOKEN }}
         run: |
           echo "${DOCKER_PASSWORD}" | docker login --username "${DOCKER_USERNAME}" --password-stdin
-
-      - name: Create docker manifest
-        run: |
           docker manifest create ${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//} \
             --amend ${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-amd64 \
             --amend ${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm-v7 \
@@ -117,13 +109,33 @@ jobs:
             docker manifest push ${GITHUB_REPOSITORY//docker-/}:latest
           fi
 
-      - name: Check docker manifest
+      - name: Create docker manifest (GitHub)
+        env:
+          DOCKER_USERNAME: ${GITHUB_REPOSITORY%/*}
+          DOCKER_PASSWORD: ${{ secrets.PERSONAL_TOKEN }}
         run: |
-          docker manifest inspect ${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}
-          docker manifest inspect ${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${HDIDLE_VERSION=1.10}
-          docker manifest inspect ${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}
+          echo "${DOCKER_PASSWORD}" | docker login ghcr.io --username "${DOCKER_USERNAME}" --password-stdin
+          docker manifest create ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//} \
+            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-amd64 \
+            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm-v7 \
+            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm64
+          docker manifest push ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}
+          docker manifest create ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${HDIDLE_VERSION=1.10} \
+            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-amd64 \
+            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm-v7 \
+            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm64
+          docker manifest push ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${HDIDLE_VERSION=1.10}
+          docker manifest create ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7} \
+            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-amd64 \
+            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm-v7 \
+            --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm64
+          docker manifest push ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}
           if [[ ${GITHUB_REF//refs\/heads\//} == stable ]]; then
-            docker manifest inspect ${GITHUB_REPOSITORY//docker-/}:latest
+            docker manifest create ghcr.io/${GITHUB_REPOSITORY//docker-/}:latest \
+              --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-amd64 \
+              --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm-v7 \
+              --amend ghcr.io/${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-linux-arm64
+            docker manifest push ghcr.io/${GITHUB_REPOSITORY//docker-/}:latest
           fi
 
       - name: Send discord notification
