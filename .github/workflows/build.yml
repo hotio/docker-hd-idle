@@ -61,7 +61,7 @@ jobs:
           echo ::set-output name=platform::${ARCHITECTURE//-/\/}
           echo ::set-output name=cache::${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-cache-${{ matrix.architecture }}
           echo ::set-output name=tag::${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-${{ matrix.architecture }}
-          echo ::set-output name=version::${APP_VERSION=1.1056}
+          echo ::set-output name=version::${APP_VERSION=1.10}
 
       - name: Build and push
         uses: docker/build-push-action@v2
