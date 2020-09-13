@@ -61,7 +61,7 @@ jobs:
           echo ::set-output name=platform::${ARCHITECTURE//-/\/}
           echo ::set-output name=cache::${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-cache-${{ matrix.architecture }}
           echo ::set-output name=tag::${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-${{ matrix.architecture }}
-          echo ::set-output name=version::${HDIDLE_VERSION=1.10}
+          echo ::set-output name=version::${APP_VERSION=1.10}
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -91,6 +91,8 @@ jobs:
 
   publish:
     runs-on: ubuntu-20.04
+    outputs:
+      status: ${{ steps.status.outputs.result }}
     needs: [build]
     steps:
       - name: Checkout
@@ -129,12 +131,24 @@ jobs:
             fi
           done
 
+      - name: Status
+        id: status
+        run: |
+          echo ::set-output name=result::success
+
+  notify:
+    runs-on: ubuntu-20.04
+    if: ${{ always() }}
+    needs: [publish]
+    steps:
       - name: Send discord notification
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           GITHUB_OWNER: ${{ github.repository_owner }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION_FIELD: ${{ needs.build.outputs.version }}
+          STATUS: ${{ needs.publish.outputs.status }}
         run: |
           curl -u "${GITHUB_OWNER}:${GITHUB_TOKEN}" -fsSL https://gist.githubusercontent.com/${GITHUB_OWNER}/3d98159d47e0bf5eccbff221f1288472/raw/discord-action-notify.sh > discord-action-notify.sh
           bash discord-action-notify.sh
+          echo ${STATUS}
