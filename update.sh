@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 if [[ ${1} == "checkdigests" ]]; then
     mkdir ~/.docker && echo '{"experimental": "enabled"}' > ~/.docker/config.json
