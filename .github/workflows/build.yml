@@ -91,8 +91,6 @@ jobs:
 
   publish:
     runs-on: ubuntu-20.04
-    outputs:
-      status: ${{ steps.status.outputs.result }}
     needs: [build]
     steps:
       - name: Checkout
@@ -111,30 +109,31 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.PERSONAL_TOKEN }}
 
-      - name: Create docker manifests
+      - name: Create manifests for DockerHub
         env:
           DOCKER_CLI_EXPERIMENTAL: enabled
         run: |
-          registries=(docker.io ghcr.io)
-          for registry in ${registries[*]}; do
-            TAG_BASE="${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}"
-            TAG="${TAG_BASE}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}"
-            docker manifest create ${registry}/${TAG_BASE} --amend ${registry}/${TAG}-linux-amd64 --amend ${registry}/${TAG}-linux-arm-v7 --amend ${registry}/${TAG}-linux-arm64
-            docker manifest push   ${registry}/${TAG_BASE}
-            docker manifest create ${registry}/${TAG_BASE}-${{ needs.build.outputs.version }} --amend ${registry}/${TAG}-linux-amd64 --amend ${registry}/${TAG}-linux-arm-v7 --amend ${registry}/${TAG}-linux-arm64
-            docker manifest push   ${registry}/${TAG_BASE}-${{ needs.build.outputs.version }}
-            docker manifest create ${registry}/${TAG_BASE}-${GITHUB_SHA:0:7} --amend ${registry}/${TAG}-linux-amd64 --amend ${registry}/${TAG}-linux-arm-v7 --amend ${registry}/${TAG}-linux-arm64
-            docker manifest push   ${registry}/${TAG_BASE}-${GITHUB_SHA:0:7}
-            if [[ ${GITHUB_REF//refs\/heads\//} == stable ]]; then
-              docker manifest create ${registry}/${GITHUB_REPOSITORY//docker-/}:latest --amend ${registry}/${TAG}-linux-amd64 --amend ${registry}/${TAG}-linux-arm-v7 --amend ${registry}/${TAG}-linux-arm64
-              docker manifest push   ${registry}/${GITHUB_REPOSITORY//docker-/}:latest
-            fi
-          done
+          IMAGE=${GITHUB_REPOSITORY//docker-/}
+          TAG=${GITHUB_REF//refs\/heads\//}
+          SOURCE=${IMAGE}:${TAG}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}
+          docker manifest create ${IMAGE}:${TAG}                                    --amend ${SOURCE}-linux-amd64 --amend ${SOURCE}-linux-arm-v7 --amend ${SOURCE}-linux-arm64 && docker manifest push ${IMAGE}:${TAG}
+          docker manifest create ${IMAGE}:${TAG}-${{ needs.build.outputs.version }} --amend ${SOURCE}-linux-amd64 --amend ${SOURCE}-linux-arm-v7 --amend ${SOURCE}-linux-arm64 && docker manifest push ${IMAGE}:${TAG}-${{ needs.build.outputs.version }}
+          docker manifest create ${IMAGE}:${TAG}-${GITHUB_SHA:0:7}                  --amend ${SOURCE}-linux-amd64 --amend ${SOURCE}-linux-arm-v7 --amend ${SOURCE}-linux-arm64 && docker manifest push ${IMAGE}:${TAG}-${GITHUB_SHA:0:7}
+          [[ ${GITHUB_REF//refs\/heads\//} == stable ]] && \
+          docker manifest create ${IMAGE}:latest                                    --amend ${SOURCE}-linux-amd64 --amend ${SOURCE}-linux-arm-v7 --amend ${SOURCE}-linux-arm64 && docker manifest push ${IMAGE}:latest
 
-      - name: Status
-        id: status
+      - name: Create manifests for GitHub Container Registry
+        env:
+          DOCKER_CLI_EXPERIMENTAL: enabled
         run: |
-          echo ::set-output name=result::success
+          IMAGE=ghcr.io/${GITHUB_REPOSITORY//docker-/}
+          TAG=${GITHUB_REF//refs\/heads\//}
+          SOURCE=${IMAGE}:${TAG}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}
+          docker manifest create ${IMAGE}:${TAG}                                    --amend ${SOURCE}-linux-amd64 --amend ${SOURCE}-linux-arm-v7 --amend ${SOURCE}-linux-arm64 && docker manifest push ${IMAGE}:${TAG}
+          docker manifest create ${IMAGE}:${TAG}-${{ needs.build.outputs.version }} --amend ${SOURCE}-linux-amd64 --amend ${SOURCE}-linux-arm-v7 --amend ${SOURCE}-linux-arm64 && docker manifest push ${IMAGE}:${TAG}-${{ needs.build.outputs.version }}
+          docker manifest create ${IMAGE}:${TAG}-${GITHUB_SHA:0:7}                  --amend ${SOURCE}-linux-amd64 --amend ${SOURCE}-linux-arm-v7 --amend ${SOURCE}-linux-arm64 && docker manifest push ${IMAGE}:${TAG}-${GITHUB_SHA:0:7}
+          [[ ${GITHUB_REF//refs\/heads\//} == stable ]] && \
+          docker manifest create ${IMAGE}:latest                                    --amend ${SOURCE}-linux-amd64 --amend ${SOURCE}-linux-arm-v7 --amend ${SOURCE}-linux-arm64 && docker manifest push ${IMAGE}:latest
 
   notify:
     runs-on: ubuntu-20.04
@@ -147,7 +146,7 @@ jobs:
           GITHUB_OWNER: ${{ github.repository_owner }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION_FIELD: ${{ needs.build.outputs.version }}
-          STATUS: ${{ needs.publish.outputs.status }}
+          STATUS: ${{ needs.publish.result }}
         run: |
           curl -u "${GITHUB_OWNER}:${GITHUB_TOKEN}" -fsSL https://gist.githubusercontent.com/${GITHUB_OWNER}/3d98159d47e0bf5eccbff221f1288472/raw/discord-action-notify.sh > discord-action-notify.sh
           bash discord-action-notify.sh
