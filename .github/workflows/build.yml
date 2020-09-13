@@ -119,7 +119,7 @@ jobs:
           for registry in ${registries[*]}; do
             TAG_BASE="${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}"
             TAG="${TAG_BASE}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}"
-            docker manifest create ${registry}/${TAG_BASE} --amend ${registry}/${TAG}-linux-amd64 --amend ${registry}/${TAG}-linux-arm-v7 --amend ${registry}/${TAG}-linux-arm64
+            docker manifest create ${registry}/${TAG_BASE} --amend ${registry}/${TAG}-linux-amd64 --amend ${registry}/${TAG}-linux-arm-v7 --amend ${registry}/${TAG}-linux-arm645
             docker manifest push   ${registry}/${TAG_BASE}
             docker manifest create ${registry}/${TAG_BASE}-${{ needs.build.outputs.version }} --amend ${registry}/${TAG}-linux-amd64 --amend ${registry}/${TAG}-linux-arm-v7 --amend ${registry}/${TAG}-linux-arm64
             docker manifest push   ${registry}/${TAG_BASE}-${{ needs.build.outputs.version }}
