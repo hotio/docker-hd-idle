@@ -143,11 +143,13 @@ jobs:
     needs: [build, publish]
     steps:
       - name: Take screenshot
+        if: "!contains(github.event.head_commit.message, 'skip ci')"
         run: |
           [[ -f puppeteer.js ]] && bash update.sh screenshot ${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}
           true
 
       - name: Send discord notification
+        if: "!contains(github.event.head_commit.message, 'skip ci')"
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           GITHUB_OWNER: ${{ github.repository_owner }}
