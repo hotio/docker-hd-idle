@@ -52,6 +52,8 @@ jobs:
         id: prep
         run: |
           ARCHITECTURE=${{ matrix.architecture }}
+          VERSION=$(grep "^VERSION=.*$" ./VERSION | sed s/VERSION=//)
+          BUILD_ARGS=$(paste -sd, ./VERSION)
           echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           echo ::set-output name=title::${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}
           echo ::set-output name=revision::${GITHUB_SHA}
@@ -61,7 +63,8 @@ jobs:
           echo ::set-output name=platform::${ARCHITECTURE//-/\/}
           echo ::set-output name=cache::${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-cache-${{ matrix.architecture }}
           echo ::set-output name=tag::${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}-${GITHUB_RUN_NUMBER}-${{ matrix.architecture }}
-          echo ::set-output name=version::${APP_VERSION=1.10}
+          echo ::set-output name=version::${VERSION}
+          echo ::set-output name=build-args::${BUILD_ARGS}
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -82,12 +85,11 @@ jobs:
             org.opencontainers.image.vendor=${{ steps.prep.outputs.vendor }}
             org.opencontainers.image.url=${{ steps.prep.outputs.url }}
             org.opencontainers.image.version=${{ steps.prep.outputs.version }}
-          build-args: |
-            VERSION=${{ steps.prep.outputs.version }}
+          build-args: ${{ steps.prep.outputs.build-args }}
 
-      - name: List installed packages
+      - name: Run tests
         run: |
-          docker run --rm --entrypoint="" ${{ steps.prep.outputs.tag }} apk -vv info | sort
+          bash update.sh tests ${{ steps.prep.outputs.tag }}
 
   publish:
     runs-on: ubuntu-20.04
@@ -140,6 +142,11 @@ jobs:
     if: ${{ always() }}
     needs: [build, publish]
     steps:
+      - name: Take screenshot
+        run: |
+          [[ -f puppeteer.js ]] && bash update.sh screenshot ${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}-${GITHUB_SHA:0:7}
+          true
+
       - name: Send discord notification
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
