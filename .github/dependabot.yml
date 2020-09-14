@@ -6,7 +6,7 @@ updates:
       interval: "daily"
     target-branch: "master"
     labels:
-      - "gha updates"
+      - "enhancement"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -14,4 +14,4 @@ updates:
       interval: "daily"
     target-branch: "stable"
     labels:
-      - "gha updates"
+      - "enhancement"
