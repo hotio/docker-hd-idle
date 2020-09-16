@@ -87,6 +87,11 @@ jobs:
             org.opencontainers.image.version=${{ steps.prep.outputs.version }}
           build-args: ${{ steps.prep.outputs.build-args }}
 
+      - name: Dive
+        uses: yuichielectric/dive-action@master
+        with:
+          image: "${{ steps.prep.outputs.tag }}"
+
       - name: Run tests
         run: |
           bash update.sh tests ${{ steps.prep.outputs.tag }}
