@@ -87,7 +87,7 @@ jobs:
             org.opencontainers.image.version=${{ steps.prep.outputs.version }}
           build-args: ${{ steps.prep.outputs.build-args }}
 
-      - name: Dive
+      - name: Dive Analysis
         uses: yuichielectric/dive-action@0.0.2
         with:
           image: "${{ steps.prep.outputs.tag }}"
