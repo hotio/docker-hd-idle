@@ -55,8 +55,8 @@ jobs:
         id: prep
         run: |
           ARCHITECTURE=${{ matrix.architecture }}
-          VERSION=$(grep "^VERSION=.*$" ./VERSION | sed s/VERSION=//)
-          BUILD_ARGS=$(paste -sd, ./VERSION)
+          VERSION=$(jq -r '.version' < VERSION.json)
+          BUILD_ARGS=$(jq -r 'to_entries[] | [(.key | ascii_upcase),.value] | join("=")' < VERSION.json | paste -sd,)
           echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           echo ::set-output name=title::${GITHUB_REPOSITORY//docker-/}:${GITHUB_REF//refs\/heads\//}
           echo ::set-output name=revision::${GITHUB_SHA}
